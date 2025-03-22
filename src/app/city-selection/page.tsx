@@ -4,7 +4,7 @@ import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { useRouter } from 'next/navigation';
 import { getCities } from '../actions/cityActions';
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 const citySelectionSchema = Yup.object().shape({
     cop1City: Yup.number().required('City selection is required'),
@@ -22,9 +22,9 @@ export default function CitySelection() {
 
     useEffect(() => {
         (async () => {
-            const data= await getCities();
-            setCities(data)
-        })()
+            const data = await getCities();
+            setCities(data);
+        })();
     }, []);
 
     const initialValues = {
@@ -47,7 +47,7 @@ export default function CitySelection() {
                     onSubmit={handleSubmit}
                 >
                     {({ values }) => (
-                        <Form>
+                        <Form role="form">
                             <div className="space-y-6">
                                 {['Cop 1', 'Cop 2', 'Cop 3'].map((cop, index) => {
                                     const selectedCity = cities.find(city => city.id === Number(values[`cop${index + 1}City`]));
@@ -70,7 +70,7 @@ export default function CitySelection() {
                                                 <ErrorMessage name={`cop${index + 1}City`} component="div" className="text-red-500 mt-2" />
                                             </div>
                                             {selectedCity && (
-                                                <div className="w-48 h-48 bg-cover bg-center rounded-lg" style={{ backgroundImage: `url('/cities/${selectedCity.name.toLowerCase().replace(' ', '-')}.png` }}></div>
+                                                <div className="w-48 h-48 bg-cover bg-center rounded-lg" style={{ backgroundImage: `url('/cities/${selectedCity.name.toLowerCase().replace(' ', '-')}.png')` }}></div>
                                             )}
                                         </div>
                                     );
