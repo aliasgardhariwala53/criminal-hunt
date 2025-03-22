@@ -1,6 +1,17 @@
 import { simulateFugitiveLocation, checkCapture } from '../actions/gameActions';
+type SearchParams = {
+    cop1City: string;
+    cop2City: string;
+    cop3City: string;
+    cop1Vehicle: string;
+    cop2Vehicle: string;
+    cop3Vehicle: string;
+};
 
-export default async function Result({ searchParams }: { searchParams: { cop1City: string; cop2City: string; cop3City: string; cop1Vehicle: string; cop2Vehicle: string; cop3Vehicle: string } }) {
+type PageProps = {
+    searchParams: SearchParams;
+};
+export default async function Result({ searchParams }: PageProps) {
     const fugitiveLocationId = await simulateFugitiveLocation();
 
     const { success, copName } = await checkCapture(fugitiveLocationId, {
