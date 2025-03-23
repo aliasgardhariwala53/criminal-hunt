@@ -4,7 +4,14 @@ import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getVehicles } from '../actions/vehicleActions';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
+
+type FormValues = {
+    cop1Vehicle: string;
+    cop2Vehicle: string;
+    cop3Vehicle: string;
+    [key: `cop${number}Vehicle`]: string; // Add index signature for dynamic keys
+};
 
 const vehicleSelectionSchema = Yup.object().shape({
     cop1Vehicle: Yup.number().required('Vehicle selection is required'),
@@ -16,7 +23,7 @@ const vehicleSelectionSchema = Yup.object().shape({
         .notOneOf([Yup.ref('cop1Vehicle'), Yup.ref('cop2Vehicle')], 'Vehicle must be unique'),
 });
 
-export default function VehicleSelection() {
+function VehicleSelectionContent() {
     const router = useRouter();
     const [vehicles, setVehicles] = useState<Record<string, any>[]>([]);
 
@@ -24,17 +31,17 @@ export default function VehicleSelection() {
     useEffect(() => {
         (async () => {
             const data = await getVehicles();
-            setVehicles(data)
-        })()
+            setVehicles(data);
+        })();
     }, []);
 
-    const initialValues = {
+    const initialValues: FormValues = {
         cop1Vehicle: '',
         cop2Vehicle: '',
         cop3Vehicle: '',
     };
 
-    const handleSubmit = (values: { cop1Vehicle: string; cop2Vehicle: string; cop3Vehicle: string }) => {
+    const handleSubmit = (values: FormValues) => {
         router.push(
             `/result?cop1City=${searchParams.get('cop1City')}&cop2City=${searchParams.get('cop2City')}&cop3City=${searchParams.get('cop3City')}&cop1Vehicle=${values.cop1Vehicle}&cop2Vehicle=${values.cop2Vehicle}&cop3Vehicle=${values.cop3Vehicle}`
         );
@@ -53,24 +60,28 @@ export default function VehicleSelection() {
                         <Form>
                             <div className="space-y-6">
                                 {['Cop 1', 'Cop 2', 'Cop 3'].map((cop, index) => {
-                                    const selectedVehicle = vehicles.find(vehicle => vehicle.id === Number(values[`cop${index + 1}Vehicle`]));
+                                    const vehicleKey = `cop${index + 1}Vehicle` as keyof FormValues; // Type assertion for dynamic key
+                                    const selectedVehicle = vehicles.find(vehicle => vehicle.id === Number(values[vehicleKey]));
                                     return (
                                         <div key={index} className="flex items-center space-x-6">
                                             <div className="flex-1">
                                                 <h2 className="text-2xl font-semibold mb-4">{cop}</h2>
-                                                <Field as="select" name={`cop${index + 1}Vehicle`} className="w-full p-3 border border-gray-300 rounded-lg">
+                                                <Field as="select" name={vehicleKey} className="w-full p-3 border border-gray-300 rounded-lg">
                                                     <option value="">Select a vehicle</option>
                                                     {vehicles.map(vehicle => (
                                                         <option
                                                             key={vehicle.id}
                                                             value={vehicle.id}
-                                                            disabled={vehicle.id === Number(values[`cop${index === 0 ? 2 : index === 1 ? 3 : 1}Vehicle`]) || vehicle.id === Number(values[`cop${index === 0 ? 3 : index === 1 ? 1 : 2}Vehicle`])}
+                                                            disabled={
+                                                                vehicle.id === Number(values[`cop${index === 0 ? 2 : index === 1 ? 3 : 1}Vehicle` as keyof FormValues]) ||
+                                                                vehicle.id === Number(values[`cop${index === 0 ? 3 : index === 1 ? 1 : 2}Vehicle` as keyof FormValues])
+                                                            }
                                                         >
                                                             {vehicle.kind}
                                                         </option>
                                                     ))}
                                                 </Field>
-                                                <ErrorMessage name={`cop${index + 1}Vehicle`} component="div" className="text-red-500 mt-2" />
+                                                <ErrorMessage name={vehicleKey} component="div" className="text-red-500 mt-2" />
                                             </div>
                                             {selectedVehicle && (
                                                 <div className="w-48 h-48 bg-cover bg-center rounded-lg" style={{ backgroundImage: `url('/vehicles/${selectedVehicle.kind.toLowerCase().replace(' ', '-')}.png')` }}></div>
@@ -87,5 +98,13 @@ export default function VehicleSelection() {
                 </Formik>
             </div>
         </div>
+    );
+}
+
+export default function VehicleSelection() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-100">Loading...</div>}>
+            <VehicleSelectionContent />
+        </Suspense>
     );
 }

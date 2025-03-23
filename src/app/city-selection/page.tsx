@@ -50,7 +50,7 @@ export default function CitySelection() {
                         <Form role="form">
                             <div className="space-y-6">
                                 {['Cop 1', 'Cop 2', 'Cop 3'].map((cop, index) => {
-                                    const selectedCity = cities.find(city => city.id === Number(values[`cop${index + 1}City`]));
+                                   const selectedCity = cities.find(city => city.id === Number(values[`cop${index + 1}City` as keyof typeof values]));
                                     return (
                                         <div key={index} className="flex items-center space-x-6">
                                             <div className="flex-1">
